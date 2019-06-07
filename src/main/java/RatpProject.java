@@ -1,6 +1,7 @@
 import graph.Graph;
 import graph.Vertex;
 import me.tongfei.progressbar.ProgressBar;
+import me.tongfei.progressbar.ProgressBarBuilder;
 import network.JsonNetworkParser;
 import network.dto.Network;
 import network.dto.Station;
@@ -14,6 +15,7 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class RatpProject {
 
@@ -44,10 +46,17 @@ public class RatpProject {
         int pairsByThread = pairsCount / tasksCount;
 
         CountDownLatch countDownLatch = new CountDownLatch(tasksCount);
+        ExecutorService executorService = Executors.newFixedThreadPool(46);
 
-        try (ProgressBar pb = new ProgressBar("Calculating shortest distances", pairsCount)) {
+        try (
+                ProgressBar pb = (new ProgressBarBuilder())
+                        .setTaskName("Calculating shortest distances")
+                        .setInitialMax(pairsCount)
+                        .setUpdateIntervalMillis(500)
+                        .showSpeed()
+                        .build()
+        ) {
             Map<StationPair, List<Vertex<Station>>> shortestPaths = new HashMap<>();
-            ExecutorService executorService = Executors.newFixedThreadPool(46);
 
             for (int j = 0; j < tasksCount; j++) {
                 int start = j * pairsByThread;
@@ -61,13 +70,15 @@ public class RatpProject {
                         List<Vertex<Station>> shortestPath = stationGraph.dijkstra(stationPair.getFirst(), stationPair.getSecond());
                         shortestPaths.put(stationPair, shortestPath);
                     }
-                    countDownLatch.countDown();
                     pb.stepBy(pairsSubList.size());
+                    countDownLatch.countDown();
                 });
             }
-            countDownLatch.await();
-            executorService.shutdown();
+
+            countDownLatch.await(10, TimeUnit.MINUTES);
             return shortestPaths;
+        } finally {
+            executorService.shutdown();
         }
     }
 
