@@ -32,6 +32,12 @@ public class RatpProject {
         System.out.println(String.format("Longest path is between %s and %s", stationPair.getFirst(), stationPair.getSecond()));
     }
 
+    /**
+     * Find the shortest path for any directed pair of stations
+     * @param stationGraph The directed graph with stations as nodes
+     * @return A map of station pairs to the path from station A to station B
+     * @throws InterruptedException Thrown if the computation takes more than 10 minutes
+     */
     private static Map<StationPair, List<Vertex<Station>>> shortestPaths(Graph<Station> stationGraph) throws InterruptedException {
         // Build a list of all stations pairs
         List<StationPair> pairs = new ArrayList<>();
@@ -82,6 +88,12 @@ public class RatpProject {
         }
     }
 
+    /**
+     * Find the diameter of a graph by computing all the shortest paths and finding the longest one
+     * @param stationGraph The directed graph of which to find the diameter
+     * @return A map from the Map Entry of the pair of stations with the longest shortest path to the path from station A to station B
+     * @throws InterruptedException Thrown if the computation takes more than 10 minutes
+     */
     private static Map.Entry<StationPair, List<Vertex<Station>>> getLongestPath(Graph<Station> stationGraph) throws InterruptedException {
         Map<StationPair, List<Vertex<Station>>> shortestPaths = shortestPaths(stationGraph);
 

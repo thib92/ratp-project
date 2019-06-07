@@ -3,22 +3,25 @@ package graph;
 import java.util.*;
 
 public class Graph<T> {
-    private int maxDistance = Integer.MAX_VALUE;
 
     private List<Vertex<T>> vertices;
     private List<Edge<T>> edges;
 
+    /**
+     * Graph constructor
+     * Create an empty graph
+     */
     public Graph() {
         vertices = new ArrayList<>();
         edges = new ArrayList<>();
     }
 
-    public Graph(int maxDistance) {
-        vertices = new ArrayList<>();
-        edges = new ArrayList<>();
-        this.maxDistance = maxDistance;
-    }
-
+    /**
+     * Get an Edge of the graph
+     * @param from The Vertex from which the Edge starts
+     * @param to The Vertex to which the Edge goes
+     * @return The Edge connecting the two Vertices, or null if they are not linked by an Edge
+     */
     public Edge<T> getEdge(Vertex<T> from, Vertex<T> to) {
         for (Edge<T> e : edges) {
             if (e.getFrom().equals(from) && e.getTo().equals(to)) {
@@ -28,6 +31,11 @@ public class Graph<T> {
         return null;
     }
 
+    /**
+     * Get the Vertex representing the given value
+     * @param value The value held by the researched Vertex
+     * @return The Vertex holding the value, or null if the value is not in the Graph
+     */
     public Vertex<T> getVertex(T value) {
         for (Vertex<T> v : vertices) {
             if (v.getValue().equals(value)) {
@@ -37,16 +45,31 @@ public class Graph<T> {
         return null;
     }
 
+    /**
+     * Add a Vertex to the graph holding the provided value, disconnected from the rest
+     * @param name The value held by the new Vertex
+     */
     public void addVertex(T name) {
         Vertex<T> v = new Vertex<>(name);
         vertices.add(v);
     }
 
+    /**
+     * Connect two Vertices with a new Edge
+     * @param from The Vertex from which the Edge goes
+     * @param to The Vertex to which the Edge goes
+     * @param weight The weight of the Edge
+     */
     public void addEdge(Vertex<T> from, Vertex<T> to, Integer weight) {
         Edge<T> e = new Edge<>(from, to, weight);
         edges.add(e);
     }
 
+    /**
+     * Get all the neighbours of a Vertex
+     * @param vertex The input Vertex
+     * @return A List of all the Vertices where an Edge goes from the input Vertex to it
+     */
     public List<Vertex<T>> getNeighbours(Vertex<T> vertex) {
         List<Vertex<T>> neighbours = new ArrayList<>();
         for (Edge<T> edge: edges) {
@@ -57,6 +80,12 @@ public class Graph<T> {
         return neighbours;
     }
 
+    /**
+     * Run the Dijkstra algorithm on the current Graph to find the shortest path from the source to the target
+     * @param sourceName The value of the starting point
+     * @param targetName The value of the end point
+     * @return A List of all the Vertices to visit in order to go from the source to the target in the shortest path possible
+     */
     public List<Vertex<T>> dijkstra(T sourceName, T targetName) {
         Vertex<T> source = getVertex(sourceName);
         Vertex<T> target = getVertex(targetName);
@@ -76,7 +105,7 @@ public class Graph<T> {
 
         // Initialize the arrays
         for (Vertex<T> vertex: vertices) {
-            distances.put(vertex, maxDistance);
+            distances.put(vertex, Integer.MAX_VALUE);
             visited.put(vertex, false);
             previous.put(vertex, null);
         }
@@ -120,7 +149,7 @@ public class Graph<T> {
             }
         }
 
-        if (distances.get(target) == maxDistance) {
+        if (distances.get(target) == Integer.MAX_VALUE) {
             return null;
         }
 
