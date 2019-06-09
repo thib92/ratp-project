@@ -33,6 +33,10 @@ public class Graph<T> {
         return null;
     }
 
+    public List<Edge<T>> getEdges() {
+        return edges;
+    }
+
     /**
      * Get the Vertex representing the given value
      * @param value The value held by the researched Vertex

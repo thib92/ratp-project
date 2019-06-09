@@ -1,3 +1,4 @@
+import graph.Edge;
 import graph.Graph;
 import graph.Vertex;
 import me.tongfei.progressbar.ProgressBar;
@@ -8,10 +9,9 @@ import network.dto.Station;
 import util.Pair;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
+import static java.util.Collections.reverseOrder;
 
 public class RatpProject {
 
@@ -23,9 +23,15 @@ public class RatpProject {
         Graph<Station> stationGraph = networkParser.buildGraph(network, false);
         Graph<Station> weightedStationGraph = networkParser.buildGraph(network, true);
 
-        Map.Entry<Pair, List<Vertex<Station>>> longestPath = getLongestPath(weightedStationGraph, true);
-        Pair stationPair = longestPath.getKey();
-        System.out.println(String.format("Longest path is between %s and %s", stationPair.getKey(), stationPair.getValue()));
+//        Map.Entry<Pair, List<Vertex<Station>>> longestPath = getLongestPath(weightedStationGraph, true);
+//        Pair stationPair = longestPath.getKey();
+//        System.out.println(String.format("Longest path is between %s and %s", stationPair.getKey(), stationPair.getValue()));
+        LinkedHashMap<Edge<Station>, Integer> edgesBetweenCulsters = getEdgesBetweenCulsters(stationGraph);
+        for (Map.Entry<Edge<Station>, Integer> edgeIntegerEntry: edgesBetweenCulsters.entrySet()){
+            Edge<Station> edge = edgeIntegerEntry.getKey();
+            int betweenness = edgeIntegerEntry.getValue();
+            System.out.println(String.format("Edege between %s and %s has a betweenness of %s", edge.getFrom().getValue(), edge.getTo().getValue(), betweenness));
+        }
     }
 
     /**
@@ -86,5 +92,43 @@ public class RatpProject {
         }
 
         return longestPath;
+    }
+
+
+    private static Map<Edge<Station>, Integer> getEdgesBetweennesses(Graph<Station> stationGraph) {
+        Map<Pair, List<Vertex<Station>>> shortestPaths = shortestPaths(stationGraph, true);
+
+        Map<Edge<Station>, Integer> edgeBetweennesses = new HashMap<>();
+        for (Edge<Station> edge: stationGraph.getEdges()) {
+            edgeBetweennesses.put(edge, 0);
+        }
+        for (Map.Entry<Pair, List<Vertex<Station>>> pathPair: shortestPaths.entrySet()) {
+            List<Vertex<Station>> path = pathPair.getValue();
+            if (path == null) {
+                continue;
+            }
+            for (int i = 0; i < path.size() - 1; i++) {
+                Edge<Station> edge = stationGraph.getEdge(path.get(i), path.get(i+1));
+                Integer betweenness  = edgeBetweennesses.get(edge);
+                edgeBetweennesses.put(edge, betweenness + 1);
+            }
+        }
+
+        return edgeBetweennesses;
+    }
+
+    private static LinkedHashMap<Edge<Station>, Integer> getEdgesBetweenCulsters(Graph<Station> stationGraph) {
+        Map<Edge<Station>, Integer> edgesBetweennesses = getEdgesBetweennesses(stationGraph);
+        return edgesBetweennesses
+                .entrySet().stream()
+                .sorted(reverseOrder(Map.Entry.comparingByValue()))
+                .limit(10)
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        Map.Entry::getValue,
+                        (oldValue, newValue) -> oldValue, LinkedHashMap::new));
+
+
+
     }
 }
