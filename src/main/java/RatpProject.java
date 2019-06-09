@@ -23,7 +23,7 @@ public class RatpProject {
         Graph<Station> stationGraph = networkParser.buildGraph(network, false);
         Graph<Station> weightedStationGraph = networkParser.buildGraph(network, true);
 
-        Map.Entry<Pair, List<Vertex<Station>>> longestPath = getLongestPath(weightedStationGraph);
+        Map.Entry<Pair, List<Vertex<Station>>> longestPath = getLongestPath(weightedStationGraph, true);
         Pair stationPair = longestPath.getKey();
         System.out.println(String.format("Longest path is between %s and %s", stationPair.getKey(), stationPair.getValue()));
     }
@@ -33,7 +33,7 @@ public class RatpProject {
      * @param stationGraph The directed graph with stations as nodes
      * @return A map of station pairs to the path from station A to station B
      */
-    private static Map<Pair, List<Vertex<Station>>> shortestPaths(Graph<Station> stationGraph) {
+    private static Map<Pair, List<Vertex<Station>>> shortestPaths(Graph<Station> stationGraph, boolean useDijkstra) {
         // Build a list of all stations pairs
         List<Pair<Station, Station>> pairs = new ArrayList<>();
         for (Station station: network.getStations().values()) {
@@ -52,7 +52,12 @@ public class RatpProject {
         ) {
             return pairs.parallelStream()
                     .map(stationPair -> {
-                        List<Vertex<Station>> shortestPath = stationGraph.dijkstra(stationPair.getKey(), stationPair.getValue());
+                        List<Vertex<Station>> shortestPath;
+                        if (useDijkstra) {
+                            shortestPath = stationGraph.dijkstra(stationPair.getKey(), stationPair.getValue());
+                        } else {
+                            shortestPath = stationGraph.bfs(stationPair.getKey(), stationPair.getValue());
+                        }
                         return new Pair<>(stationPair, shortestPath);
                     })
                     .peek((stationPair -> pb.step()))
@@ -66,8 +71,8 @@ public class RatpProject {
      * @param stationGraph The directed graph of which to find the diameter
      * @return A map from the Map Entry of the pair of stations with the longest shortest path to the path from station A to station B
      */
-    private static Map.Entry<Pair, List<Vertex<Station>>> getLongestPath(Graph<Station> stationGraph) {
-        Map<Pair, List<Vertex<Station>>> shortestPaths = shortestPaths(stationGraph);
+    private static Map.Entry<Pair, List<Vertex<Station>>> getLongestPath(Graph<Station> stationGraph, boolean useDijkstra) {
+        Map<Pair, List<Vertex<Station>>> shortestPaths = shortestPaths(stationGraph, useDijkstra);
 
         Map.Entry<Pair, List<Vertex<Station>>> longestPath = null;
         for (Map.Entry<Pair, List<Vertex<Station>>> entry: shortestPaths.entrySet()) {

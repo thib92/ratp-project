@@ -1,5 +1,7 @@
 package graph;
 
+import network.dto.Station;
+
 import java.util.*;
 
 public class Graph<T> {
@@ -80,6 +82,64 @@ public class Graph<T> {
         return neighbours;
     }
 
+    public List<Vertex<T>> bfs(T sourceName, T targetName) {
+        Vertex<T> source = getVertex(sourceName);
+        Vertex<T> target = getVertex(targetName);
+
+        if (source == null || target == null) {
+            return null;
+        }
+
+        // Minimal distances to a Vertex
+        Map<Vertex<T>, Integer> distances = new HashMap<>();
+
+        // Stores if we visited a given vertex
+        Map<Vertex<T>, Boolean> visited = new HashMap<>();
+
+        // Stores the previous vertex to a vertex on the shortest path to it
+        Map<Vertex<T>, Vertex<T>> previous = new HashMap<>();
+
+        // Initialize the arrays
+        for (Vertex<T> vertex: vertices) {
+            distances.put(vertex, Integer.MAX_VALUE);
+            visited.put(vertex, false);
+            previous.put(vertex, null);
+        }
+
+        // Distance to source is 0
+        distances.put(source, 0);
+
+        visited.put(source, true);
+
+        Stack<Vertex<T>> stack = new Stack<>();
+
+        stack.add(source);
+
+        System.out.println(String.format("Searching from %s to %s", sourceName, targetName));
+
+        while (!stack.isEmpty()) {
+            Vertex<T> vertex = stack.pop();
+            System.out.println(stack.size());
+            System.out.println(String.format("Fetching neighbors for %s", vertex.getValue()));
+            for (Vertex<T> neighbor: getNeighbours(vertex)) {
+                if (visited.get(neighbor)) {
+                    continue;
+                }
+                System.out.println(String.format("Neighbor: %s", neighbor.getValue()));
+                visited.put(neighbor, true);
+                distances.put(neighbor, distances.get(vertex) + 1);
+                previous.put(neighbor, vertex);
+                stack.addAll(getNeighbours(neighbor));
+            }
+        }
+
+        if (distances.get(target) == Integer.MAX_VALUE) {
+            return null;
+        }
+
+        return buildPath(source, target, previous);
+    }
+
     /**
      * Run the Dijkstra algorithm on the current Graph to find the shortest path from the source to the target
      * @param sourceName The value of the starting point
@@ -153,10 +213,14 @@ public class Graph<T> {
             return null;
         }
 
+        return buildPath(source, target, previous);
+    }
+
+    private List<Vertex<T>> buildPath(Vertex<T> source, Vertex<T> target, Map<Vertex<T>, Vertex<T>> previous) {
         List<Vertex<T>> path = new ArrayList<>();
 
         Vertex<T> vertex = target;
-        while (!vertex.equals(source)) {
+        while (!source.equals(vertex)) {
             path.add(previous.get(vertex));
             vertex = previous.get(vertex);
         }
@@ -164,6 +228,5 @@ public class Graph<T> {
         Collections.reverse(path);
 
         return path;
-
     }
 }
