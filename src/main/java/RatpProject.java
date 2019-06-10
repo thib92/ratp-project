@@ -23,15 +23,18 @@ public class RatpProject {
         Graph<Station> stationGraph = networkParser.buildGraph(network, false);
         Graph<Station> weightedStationGraph = networkParser.buildGraph(network, true);
 
-//        Map.Entry<Pair, List<Vertex<Station>>> longestPath = getLongestPath(weightedStationGraph, true);
-//        Pair stationPair = longestPath.getKey();
-//        System.out.println(String.format("Longest path is between %s and %s", stationPair.getKey(), stationPair.getValue()));
-        LinkedHashMap<Edge<Station>, Integer> edgesBetweenCulsters = getEdgesBetweenCulsters(stationGraph);
-        for (Map.Entry<Edge<Station>, Integer> edgeIntegerEntry: edgesBetweenCulsters.entrySet()){
-            Edge<Station> edge = edgeIntegerEntry.getKey();
-            int betweenness = edgeIntegerEntry.getValue();
-            System.out.println(String.format("Edege between %s and %s has a betweenness of %s", edge.getFrom().getValue(), edge.getTo().getValue(), betweenness));
-        }
+        // Get the longest path
+        Map.Entry<Pair, List<Vertex<Station>>> longestPath = getLongestPath(weightedStationGraph, true);
+        Pair stationPair = longestPath.getKey();
+        System.out.println(String.format("Longest path is between %s and %s", stationPair.getKey(), stationPair.getValue()));
+
+        // Get the edges with the highest betweenness
+        //LinkedHashMap<Edge<Station>, Integer> edgesBetweenCulsters = getEdgesBetweenCulsters(stationGraph);
+        //for (Map.Entry<Edge<Station>, Integer> edgeIntegerEntry: edgesBetweenCulsters.entrySet()){
+        //    Edge<Station> edge = edgeIntegerEntry.getKey();
+        //    int betweenness = edgeIntegerEntry.getValue();
+        //    System.out.println(String.format("Edege between %s and %s has a betweenness of %s", edge.getFrom().getValue(), edge.getTo().getValue(), betweenness));
+        //}
     }
 
     /**
@@ -120,15 +123,12 @@ public class RatpProject {
     private static LinkedHashMap<Edge<Station>, Integer> getEdgesBetweenCulsters(Graph<Station> stationGraph) {
         Map<Edge<Station>, Integer> edgesBetweennesses = getEdgesBetweennesses(stationGraph);
         return edgesBetweennesses
-                .entrySet().stream()
+                .entrySet().parallelStream()
                 .sorted(reverseOrder(Map.Entry.comparingByValue()))
                 .limit(10)
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,
                         Map.Entry::getValue,
                         (oldValue, newValue) -> oldValue, LinkedHashMap::new));
-
-
-
     }
 }
